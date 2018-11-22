@@ -2,11 +2,11 @@
 
 #define LED_DECREMENT 12  //this value will decrement the brightness from 25500 to 2000. The duration of the dimming can be calculated, knowing that it's decremented every ms. 
                           //Eg. 25500-2000 = 23500. 23500 / 10 = 2350ms = 2.35s. If I want it to dim in one second - 1000 = 23500/x, therefore x = 24 
-#define LED_DIM_LEVEL 6000
+#define LED_DIM_LEVEL 2000
 #define NEO_PIX_NB 5
 #define NEO_PIX_PIN 4
 #define AVERAGE_NB 10
-#define ACCELERATION_THRESHOLD 7 //Threshold of ms above tilt threshold 
+#define ACCELERATION_THRESHOLD 15 //Threshold of ms above tilt threshold 
 
 
 //V1.0
