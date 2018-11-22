@@ -2,7 +2,7 @@
 
 #define LED_DECREMENT 12  //this value will decrement the brightness from 25500 to 2000. The duration of the dimming can be calculated, knowing that it's decremented every ms. 
                           //Eg. 25500-2000 = 23500. 23500 / 10 = 2350ms = 2.35s. If I want it to dim in one second - 1000 = 23500/x, therefore x = 24 
-#define LED_DIM_LEVEL 2000
+#define LED_DIM_LEVEL 6000
 #define NEO_PIX_NB 5
 #define NEO_PIX_PIN 4
 #define AVERAGE_NB 10
@@ -98,7 +98,7 @@ void loop()
   {
 
   }
-  colorWipe(strip.Color(LEDbrightness [0]/100, LEDbrightness [1]/100, LEDbrightness [2]/100)); // Red;
+  colorWipe(strip.Color(LEDbrightness [0]/100, 0, 0)); // Red;
 }
 
 // Fill the dots one after the other with a color
