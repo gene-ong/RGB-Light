@@ -1,6 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
-#define LED_DECREMENT 10
+#define LED_DECREMENT 12  //this value will decrement the brightness from 25500 to 2000. The duration of the dimming can be calculated, knowing that it's decremented every ms. 
+                          //Eg. 25500-2000 = 23500. 23500 / 10 = 2350ms = 2.35s. If I want it to dim in one second - 1000 = 23500/x, therefore x = 24 
 #define LED_DIM_LEVEL 2000
 #define NEO_PIX_NB 5
 #define NEO_PIX_PIN 4
@@ -32,7 +33,7 @@ SIGNAL(TIMER0_COMPA_vect)
   //Store a bunch of values
   //Average those values
   //If they're above a threshold, increment a counter
-  //If they're below a threshol, reset a counter
+  //If they're below a threshold, reset a counter
   for (int i = 0; i < 3; i++)
   {
     //if the pin is above the threshold
