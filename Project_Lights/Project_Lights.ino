@@ -1,102 +1,109 @@
-#define FRAME_SIZE 20
-#define MOTION_SENSOR_PIN A0
-#define LED_DECREMENT 75
-#define LED_DIM_LEVEL 120
+#include <Adafruit_NeoPixel.h>
+
+#define LED_DECREMENT 10
+#define LED_DIM_LEVEL 2000
+#define NEO_PIX_NB 5
+#define NEO_PIX_PIN 4
+#define AVERAGE_NB 10
+#define ACCELERATION_THRESHOLD 7 //Threshold of ms above tilt threshold 
+
 
 //V1.0
-uint8_t AxisLED[3] = {5, 6, 9};
 uint8_t AxisMotion[3] = {A0, A1, A2};
-uint8_t tolerance[3] = {160, 160, 254};
-int Val[3] = {LED_DIM_LEVEL, LED_DIM_LEVEL, LED_DIM_LEVEL};
+const uint16_t TILT_THRESHOLD_VALUES [3] = {420 , 500, 600};
+uint16_t LEDbrightness [3] = {LED_DIM_LEVEL, LED_DIM_LEVEL, LED_DIM_LEVEL};
 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_PIX_NB, NEO_PIX_PIN, NEO_GRB + NEO_KHZ800);
 
 struct FrameBuffer {
-  uint16_t motion[FRAME_SIZE];   //Array of the motion sensor readings
+  uint16_t motion[AVERAGE_NB];   //Array of the motion sensor readings
   uint8_t pointer;
-  uint8_t average;           //the position in array to place new reading
+  uint16_t average;           //the position in array to place new reading
+  uint16_t countAboveThreshold;
 };
 
 FrameBuffer AxisReadings[3] = {0};
 
-
-
-void CAL_Average(FrameBuffer *axisReading)
-{
-  uint16_t temp = 0;
-  for (int i = 0; i < FRAME_SIZE; i++)
-  {
-    temp += axisReading->motion[i];
-  }
-  axisReading->average = temp / FRAME_SIZE;
-}
-
 // Interrupt is called once a millisecond,
 SIGNAL(TIMER0_COMPA_vect)
 {
-  //    V1.0
+  //for each axis
+  //if the pin is above the threshold
+  //Store a bunch of values
+  //Average those values
+  //If they're above a threshold, increment a counter
+  //If they're below a threshol, reset a counter
   for (int i = 0; i < 3; i++)
   {
-    AxisReadings[i].motion[AxisReadings[i].pointer] = analogRead(AxisMotion[i]);
-    //    CAL_Average(&AxisReadings[i]);
-    AxisReadings[i].pointer++;
-    if (AxisReadings[i].pointer >= FRAME_SIZE)
+    //if the pin is above the threshold
+    if (analogRead(AxisMotion[i]) > TILT_THRESHOLD_VALUES [i])
     {
-      AxisReadings[i].pointer = 0;
+      AxisReadings[i].countAboveThreshold++;
     }
-    if (AxisReadings[i].average > tolerance[i])
+    //If they're below a threshold, reset a counter
+    else
     {
-      Val[i] = 25500;
+      AxisReadings[i].countAboveThreshold = 0;
     }
-    if (Val[i] > LED_DIM_LEVEL)
+
+    if (AxisReadings[i].countAboveThreshold > ACCELERATION_THRESHOLD)
     {
-      Val[i] -= LED_DECREMENT;
+      //      Serial.println("Number of times average has been higher than tilt threshold, creater than acceleration threshold");
+      LEDbrightness [i] = 25500;
+       AxisReadings[i].countAboveThreshold = 0;
+    }
+
+
+    if (LEDbrightness [i] > LED_DIM_LEVEL)
+    {
+      //      Serial.println("LEDbrightness greater than led dim level");
+      LEDbrightness [i] -= LED_DECREMENT;
     }
     else
     {
-      Val[i] = LED_DIM_LEVEL;
+      //      Serial.println("LEDbrightness set to dim level");
+      LEDbrightness [i] = LED_DIM_LEVEL;
     }
-    analogWrite(AxisLED[i], Val[i] / 100);
   }
 }
 
 void setup()
 {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
+  //beging serial communication
+  //    Serial.begin(9600);
+
+  // Initialize all pixels to 'off'
+  strip.begin();
+  strip.show();
+
+  //Initialise pins for sensing tilt sensor
   for (int i = 0; i < 3; i++)
   {
     pinMode(AxisMotion[i], INPUT);
   }
-  for (int i = 0; i < 3; i++)
-  {
-    pinMode(AxisLED[i], OUTPUT);
-  }
+  pinMode(NEO_PIX_PIN, OUTPUT);
   // Timer0 is already used for millis() - we'll just interrupt somewhere
   // in the middle and call the "Compare A" function below
   OCR0A = 0xFF;
   TIMSK0 |= _BV(OCIE0A);
-
-
 }
 
-void loop() {
+void loop()
+{
   // put your main code here, to run repeatedly:
+  //
 
-  //Serial.print(AxisReadings[0].average);
-  //Serial.print("\t");
-  //Serial.print(AxisReadings[1].average);
-  //Serial.print("\t");
-  //Serial.println(AxisReadings[2].average);
-
-
-
-  //V1.0
-  for (int i = 0; i < 3; i++)
+  for (uint8_t i = 0; i < 3; i++)
   {
-    CAL_Average(&AxisReadings[i]);
 
   }
+  colorWipe(strip.Color(LEDbrightness [0]/100, LEDbrightness [1]/100, LEDbrightness [2]/100)); // Red;
+}
 
-  //  V2.0
-
+// Fill the dots one after the other with a color
+void colorWipe(uint32_t c) {
+  for (uint16_t i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, c);
+    strip.show();
+  }
 }
